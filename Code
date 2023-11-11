@@ -1,0 +1,99 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include "inc/hw_memmap.h"
+#include "inc/hw_types.h"
+#include "driverlib/sysctl.h"
+#include "driverlib/gpio.h"
+#include "driverlib/pin_map.h"
+#include "driverlib/timer.h"
+
+
+  /* Configure
+    PC4 Timer 0 WT0CCP0
+    PC6 Timer 1 WT1CCP0
+    PD0 Timer 2 WT2CCP0
+    PD2 Timer 3 WT3CCP0
+    PD6 Timer 5 WT5CCP0
+    PC5 Timer 0 WT0CCP1   */
+
+
+int main(void) {
+    // Set the system clock to 50 MHz
+    SysCtlClockSet(SYSCTL_SYSDIV_4 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN | SYSCTL_XTAL_16MHZ);
+
+    // Enable the clock for Wide Timer 0 (WTIMER0)
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_WTIMER0);
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_WTIMER1);
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_WTIMER2);
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_WTIMER3);
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_WTIMER5);
+
+
+    // Enable the clock for Port C (PC4 is the pin we're configuring)
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOC);
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);
+    // Configure PC4 as a timer input (WT0CCP0)
+    GPIOPinConfigure(GPIO_PC4_WT0CCP0);
+    GPIOPinTypeTimer(GPIO_PORTC_BASE, GPIO_PIN_4);
+
+    GPIOPinConfigure(GPIO_PC6_WT1CCP0);
+    GPIOPinTypeTimer(GPIO_PORTC_BASE, GPIO_PIN_6);
+
+
+      GPIOPinConfigure(GPIO_PD0_WT2CCP0);
+      GPIOPinTypeTimer(GPIO_PORTD_BASE, GPIO_PIN_0);
+
+      GPIOPinConfigure(GPIO_PD2_WT3CCP0);
+      GPIOPinTypeTimer(GPIO_PORTD_BASE, GPIO_PIN_2);
+
+      GPIOPinConfigure(GPIO_PD6_WT5CCP0);
+      GPIOPinTypeTimer(GPIO_PORTD_BASE, GPIO_PIN_6);
+
+    GPIOPinConfigure(GPIO_PC5_WT0CCP1);
+    GPIOPinTypeTimer(GPIO_PORTC_BASE, GPIO_PIN_5);
+    // Configure Wide Timer 0 (WTIMER0) for PWM mode
+    TimerConfigure(TIMER0_BASE, TIMER_CFG_A_PWM);
+    TimerConfigure(WTIMER0_BASE, TIMER_CFG_SPLIT_PAIR | TIMER_CFG_A_PWM|TIMER_CFG_B_PWM);
+ // TimerConfigure(WTIMER0_BASE, TIMER_CFG_SPLIT_PAIR | TIMER_CFG_B_PWM);
+    TimerConfigure(WTIMER1_BASE, TIMER_CFG_SPLIT_PAIR | TIMER_CFG_A_PWM);
+    TimerConfigure(WTIMER2_BASE, TIMER_CFG_SPLIT_PAIR | TIMER_CFG_A_PWM);
+    TimerConfigure(WTIMER3_BASE, TIMER_CFG_SPLIT_PAIR | TIMER_CFG_A_PWM);
+    TimerConfigure(WTIMER5_BASE, TIMER_CFG_SPLIT_PAIR | TIMER_CFG_A_PWM);
+
+    // Set the load value for the PWM period..
+
+    TimerLoadSet(TIMER0_BASE, TIMER_A, 0xFFFFFFFF);
+    TimerLoadSet(WTIMER0_BASE, TIMER_A, 2818);
+    TimerLoadSet(WTIMER1_BASE, TIMER_A, 2818);
+    TimerLoadSet(WTIMER2_BASE, TIMER_A, 2818);
+    TimerLoadSet(WTIMER3_BASE, TIMER_A,  2818);
+    TimerLoadSet(WTIMER5_BASE, TIMER_A,  2818);
+    TimerLoadSet(WTIMER0_BASE, TIMER_B,  2818);
+    // Set the match value for 50% duty cycle (PWM_PERIOD / 2)
+    TimerMatchSet(WTIMER0_BASE, TIMER_A, 1409);
+    TimerMatchSet(WTIMER1_BASE, TIMER_A, 1409);
+    TimerMatchSet(WTIMER2_BASE, TIMER_A, 1409);
+    TimerMatchSet(WTIMER3_BASE, TIMER_A, 1409);
+    TimerMatchSet(WTIMER5_BASE, TIMER_A, 1409);
+    TimerMatchSet(WTIMER0_BASE, TIMER_B, 1409);
+    // Enable Wide Timer 0 (WTIMER0) for Timer A
+    TimerEnable(WTIMER0_BASE, TIMER_A);
+    TimerEnable(WTIMER1_BASE, TIMER_A);
+    TimerEnable(WTIMER2_BASE, TIMER_A);
+    TimerEnable(WTIMER3_BASE, TIMER_A);
+    TimerEnable(WTIMER5_BASE, TIMER_A);
+    TimerEnable(WTIMER0_BASE, TIMER_B);
+    TimerEnable(TIMER0_BASE, TIMER_A);
+
+
+     TimerSynchronize(TIMER0_BASE,WTIMER_0A_SYNC|WTIMER_1A_SYNC|WTIMER_2A_SYNC|WTIMER_3A_SYNC|WTIMER_5A_SYNC|WTIMER_0B_SYNC);
+     TimerSynchronize(TIMER0_BASE,0);
+      //TimerControlStall(WTIMER0_BASE, TIMER_A, true); //Assist in debug by stalling timer at breakpoints
+    //TimerControlStall(WTIMER1_BASE, TIMER_A, true); //Assist in debug by stalling timer at breakpoints
+   //  TimerControlStall(TIMER2_BASE, TIMER_B, true); //Assist in debug by stalling timer at breakpoints
+
+    while (1) {
+        // Your application code here
+    }
+}
